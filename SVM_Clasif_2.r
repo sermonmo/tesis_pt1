@@ -24,5 +24,5 @@ endCluster()
 
 paleta_color <-  c("#00FF00", "0000FF", "228B22","FF1493")
 
-plot(svm_class, main="Clasificación con SCV", col = paleta_color,cex.lab=0.6,cex.axis=0.6,cex.main=0.7)
+plot(svm_class, main="ClasificaciÃ³n con SCV", col = paleta_color,cex.lab=0.6,cex.axis=0.6,cex.main=0.7)
 
