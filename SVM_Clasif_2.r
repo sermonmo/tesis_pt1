@@ -12,7 +12,7 @@ imgs2 <- brick("imagen_sentinel.tif")
 
 endme <- readOGR("C:/ruta_de_la_capa/shp","rois_entrenamiento")
 
-plorRGB(imgs2, 5, 4,3 stretch="lin")
+plorRGB(imgs2, 5, 4,3, stretch="lin")
 
 load("Datos.RData")
 
