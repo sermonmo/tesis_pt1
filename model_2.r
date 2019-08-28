@@ -32,49 +32,91 @@ getwd()
 #BLOQUE 2: CONVERSIÓN IMAGENES .JP2 A .TIF (GEOTIFF)
 ##################################################################################################################################
 
-gdal_translate("bandaAOT.jp2", "bandaAOT.tif")   #ASIGNAR--- AOT Nombre archivo de entrada y salida
+gdal_translate("bandaAOT.jp2", "bandaAOT_uncut.tif")   #ASIGNAR--- AOT Nombre archivo de entrada y salida
 
-gdal_translate("banda02.jp2", "banda02.tif")   #ASIGNAR--- B02 Nombre archivo de entrada y salida
+gdal_translate("banda02.jp2", "banda02_uncut.tif")   #ASIGNAR--- B02 Nombre archivo de entrada y salida
 
-gdal_translate("banda03.jp2", "banda03.tif")   #ASIGNAR--- B03 Nombre archivo de entrada y salida
+gdal_translate("banda03.jp2", "banda03_uncut.tif")   #ASIGNAR--- B03 Nombre archivo de entrada y salida
 
-gdal_translate("banda04.jp2", "banda04.tif")   #ASIGNAR--- B04 Nombre archivo de entrada y salida
+gdal_translate("banda04.jp2", "banda04_uncut.tif")   #ASIGNAR--- B04 Nombre archivo de entrada y salida
 
-gdal_translate("banda08.jp2", "banda08.tif")   #ASIGNAR--- B08 Nombre archivo de entrada y salida
+gdal_translate("banda08.jp2", "banda08_uncut.tif")   #ASIGNAR--- B08 Nombre archivo de entrada y salida
 
-gdal_translate("bandaTCI.jp2", "bandaTCI.tif")   #ASIGNAR--- TCI Nombre archivo de entrada y salida
+gdal_translate("bandaTCI.jp2", "bandaTCI_uncut.tif")   #ASIGNAR--- TCI Nombre archivo de entrada y salida
 
-gdal_translate("bandaWVP", "bandaWVP.tif")   #ASIGNAR--- WVP Nombre archivo de entrada y salida
+gdal_translate("bandaWVP", "bandaWVP_uncut.tif")   #ASIGNAR--- WVP Nombre archivo de entrada y salida
 
 
 #bandas con resolución 20m en otro directorio
 
-gdal_translate("ruta_archivo_banda11.jp2", "banda11_20m.tif") #ASIGNAR--- Ruta de archivo B11
+gdal_translate("ruta_archivo_banda11.jp2", "banda11_20m_uncut.tif") #ASIGNAR--- Ruta de archivo B11
 
-gdal_translate("ruta_archivo_banda12.jp2", "banda12_20m.tif") #ASIGNAR--- Ruta de archivo B12
-
-
-####################################################################################################################################
-#BLOQUE 3: CORRECCIÓN RESOLUCIÓN BANDA 11 Y 12
-####################################################################################################################################
-
-band11_20m <- raster("banda11_20m.tif")
-band12_20m <- raster("banda12_20m.tif")
-
-band11_10m <- disaggregate(band_11_20m, fac=2)
-band12_10m <- disaggregate(band_12_20m, fac=2)
-
-band11_10m
-
-writeRaster(band11_10m,"banda11.tiff", drivername="Gtiff") #exporta la BANDA 11 en .tif
-
-band12_10m
-
-writeRaster(band12_10m,"banda12.tiff", drivername="Gtiff") #exporta la BANDA 12 en .tif
+gdal_translate("ruta_archivo_banda12.jp2", "banda12_20m_uncut.tif") #ASIGNAR--- Ruta de archivo B12
 
 
 ####################################################################################################################################
-#BLOQUE 4: COMPOSICIÓN MULTIESPECTRAL
+#BLOQUE 3: CORRECCIÓN RESOLUCIÓN BANDA 11 Y 12 A 10m
+####################################################################################################################################
+
+band11_20m <- raster("banda11_20m_uncut.tif")
+band12_20m <- raster("banda12_20m_uncut.tif")
+
+band11_10m_uncut <- disaggregate(band11_20m, fac=2)
+band12_10m_uncut <- disaggregate(band12_20m, fac=2)
+
+band11_10m_uncut
+
+writeRaster(band11_10m_uncut,"banda11_uncut.tiff", drivername="Gtiff") #exporta la BANDA 11 en .tif
+
+band12_10m_uncut
+
+writeRaster(band12_10m_uncut,"banda12_uncut.tiff", drivername="Gtiff") #exporta la BANDA 12 en .tif
+
+####################################################################################################################################
+#BLOQUE 4: DEFINICIÓN DEL ÁREA DE ESTUDIO
+####################################################################################################################################
+
+zona_estudio <- readORG("D:/S2_img/zona_estudio.shp) #ASIGNAR--- Ruta de la capa de recorte
+
+bandaAOT_uncut <- ("bandaAOT.tif")
+bandaAOT <- crop(bandaAOT_uncut, zona_estudio)
+writeRaster(bandaAOT,"bandaAOT.tiff", drivername="Gtiff")
+
+banda02_uncut <- ("banda02_uncut.tif")
+banda02 <- crop(banda02_uncut, zona_estudio)
+writeRaster(banda02, "banda02.tif", drivername="Gtiff")
+
+banda03_uncut <- ("banda03_uncut.tif")
+banda03 <- crop(banda03_uncut, zona_estudio)
+writeRaster(banda03, "banda03.tif", drivername="Gtiff")
+
+banda04_uncut <- ("banda04_uncut.tif")
+banda04 <- crop(banda04_uncut, zona_estudio)
+writeRaster(banda04, "banda04.tif", drivername="Gtiff")
+
+banda08_uncut <- ("banda08_uncut.tif")
+banda08 <- crop(banda08_uncut, zona_estudio)
+writeRaster(banda08, "banda08.tif", drivername="Gtiff")
+
+bandaTCI_uncut <- ("bandaTCI.tif")
+bandaTCI <- crop(bandaTCI_uncut, zona_estudio)
+writeRaster(bandaTCI, "bandaTCI.tif", drivername="Gtiff")
+
+bandaWVP_uncut <- ("bandaWVP.tif")
+bandaWVP <- crop(bandaWVP_uncut, zona_estudio)
+writeRaster(bandaWVP, "bandaWVP.tif", drivername="Gtiff")
+
+banda11_uncut <- ("banda11_uncut.tif")
+banda11 <- crop(banda11_uncut, zona_estudio)
+writeRaster(banda11, "banda11.tif", drivername="Gtiff")
+
+banda12_uncut <- ("band12_uncut.tif")
+banda12 <- crop(banda12_uncut, zona_estudio)
+writeRaster(banda12, "banda12.tif", drivername="Gtiff")
+
+
+####################################################################################################################################
+#BLOQUE 5: COMPOSICIÓN MULTIESPECTRAL
 ####################################################################################################################################
 
 comp_multiespectral <- list.files('D:/S2_img', full.names = TRUE, pattern="tif") #compila todos los .tif de la carpetas
@@ -109,7 +151,7 @@ comp_mult-BR
 
 
 #####################################################################################################################################
-#BLOQUE 5: CÁLCULO DE ÍNDICES DE VEGETACIÓN, HUMEDAD Y OTROS
+#BLOQUE 6: CÁLCULO DE ÍNDICES DE VEGETACIÓN, HUMEDAD Y OTROS
 #####################################################################################################################################
 
 L4 <- raster(comp_mult-BR, layer=4) #NIR=Banda 8 Sentinel-2
@@ -205,7 +247,7 @@ writeRaster(ttvi,"ttvi.tiff", drivername="Gtiff") #exporta la capa TTVI en .tif
 #que aumentar la resolución de CHM, ya que de esta manera perderíamos la resolución del CHM
 
 #####################################################################################################################################
-#BLOQUE 6: COMPOSICIÓN MULTIBANDA DE VARIABLES EXPLICATIVAS
+#BLOQUE 7: COMPOSICIÓN MULTIBANDA DE VARIABLES EXPLICATIVAS
 #####################################################################################################################################
 
 getwd()
