@@ -47,7 +47,7 @@ gdal_translate("bandaTCI.jp2", "bandaTCI.tif")   #ASIGNAR--- TCI Nombre archivo 
 gdal_translate("bandaWVP", "bandaWVP.tif")   #ASIGNAR--- WVP Nombre archivo de entrada y salida
 
 
-#bandas con resolución 20m en otro directorio
+#bandas con resolución 20 en otro directorio
 
 gdal_translate("ruta_banda11.jp2", "banda11.tif") #ASIGNAR--- B11 Nombre archivo de entrada y salida
 
@@ -200,9 +200,53 @@ writeRaster(ttvi,"ttvi.tiff", drivername="Gtiff") #exporta la capa TTVI en .tif
 
 #writeRaster(chm,"chm.tiff", drivername="Gtiff") #exporta la capa CHM en .tif
 
+#NOTA: El CHM debe de tener el mismo tamaño de pixel que el resto de bandas (10x10)
+#En caso de no tener la misma, y que la del CHM sea menor (<10x10), es preferible reducir la resolución del resto de bandas
+#que aumentar la resolución de CHM, ya que de esta manera perderíamos la resolución del CHM
 
 ##############################################################################################################################
 #BLOQUE 6: COMPOSICIÓN MULTIBANDA DE VARIABLES EXPLICATIVAS
+##############################################################################################################################
+
+getwd()
+
+b1 <- ("banda2.tif")
+b2 <- ("banda3.tif")
+b3 <- ("banda4.tif")
+b4 <- ("banda8.tif")
+
+b5 <- ("banda11.tif")
+b6 <- ("banda12.tif")
+
+b7 <- ("bandaAOT.tif")
+b8 <- ("bandaTCI.tif")
+b9 <- ("bandaWVP.tif")
+
+b10 <- ("ndvi.tif")
+b11 <- ("gndvi.tif")
+b12 <- ("rvi.tif")
+b13 <- ("gvi.tif")
+b14 <- ("ngrdi.tif")
+b15 <- ("rg.tif")
+b16 <- ("nrvi.tif")
+b17 <- ("ndwi11.tif")
+b18 <- ("ndwi12.tif")
+b19 <- ("tvi.tif")
+b20 <- ("ttvi.tif")
+
+#b21 <- ("chm.tif")
+
+stack_variables <- stack(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b12, b13, b14, b15, b16, b17, b18, b19, b20) #b21
+
+brick_variables <- brick(stack_variables)
+
+brick_variables
+
+writeRaster(brick_variables,"brick_variables.tiff", drivername="Gtiff") #Exporta un archivo multicapa con todas las variables
+
+
+##############################################################################################################################
+#BLOQUE 7: LECTURA DE VARIABLES PARA LA CLASIFICACIÓN
 ##############################################################################################################################
 
 
