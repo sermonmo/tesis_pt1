@@ -47,7 +47,7 @@ gdal_translate("bandaTCI.jp2", "bandaTCI.tif")   #ASIGNAR--- TCI Nombre archivo 
 gdal_translate("bandaWVP", "bandaWVP.tif")   #ASIGNAR--- WVP Nombre archivo de entrada y salida
 
 
-#bandas con resolución 20 en otro directorio
+#bandas con resolución 20m en otro directorio
 
 gdal_translate("ruta_banda11.jp2", "banda11.tif") #ASIGNAR--- B11 Nombre archivo de entrada y salida
 
