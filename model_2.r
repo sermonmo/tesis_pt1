@@ -249,7 +249,7 @@ writeRaster(brick_variables,"brick_variables.tiff", drivername="Gtiff") #Exporta
 brick_variables
 
 ##############################################################################################################################
-#BLOQUE 7: LECTURA DE VARIABLES PARA LA CLASIFICACIÓN
+#BLOQUE 7: LECTURA DE DATOS DE ENTRENAMIENTO PARA EL MODELO
 ##############################################################################################################################
 
 
