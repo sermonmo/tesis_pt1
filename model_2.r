@@ -47,30 +47,30 @@ gdal_translate("bandaTCI.jp2", "bandaTCI.tif")   #ASIGNAR--- TCI Nombre archivo 
 gdal_translate("bandaWVP", "bandaWVP.tif")   #ASIGNAR--- WVP Nombre archivo de entrada y salida
 
 
-#bandas con resolución 20 en otro directorio
+#bandas con resolución 20m en otro directorio
 
-gdal_translate("ruta_banda11.jp2", "banda11.tif") #ASIGNAR--- B11 Nombre archivo de entrada y salida
+gdal_translate("ruta_archivo_banda11.jp2", "banda11_20m.tif") #ASIGNAR--- Ruta de archivo B11
 
-gdal_translate("ruta_banda12.jp2", "banda12.tif") #ASIGNAR--- B12 Nombre archivo de entrada y salida
+gdal_translate("ruta_archivo_banda12.jp2", "banda12_20m.tif") #ASIGNAR--- Ruta de archivo B12
 
 
 #############################################################################################################################
 #BLOQUE 3: CORRECCIÓN RESOLUCIÓN BANDA 11 Y 12
 #############################################################################################################################
 
-band11_20m <- raster("banda11.tif")  #ASIGNAR--- Ruta archivo Banda 11
-band12_20m <- raster("banda12.tif")  #ASIGNAR--- Ruta archivo Banda 12
+band11_20m <- raster("banda11_20m.tif")
+band12_20m <- raster("banda12_20m.tif")
 
-band11_10m <- disaggregate(band_11, fac=2)
-band12_10m <- disaggregate(band_12, fac=2)
+band11_10m <- disaggregate(band_11_20m, fac=2)
+band12_10m <- disaggregate(band_12_20m, fac=2)
 
 band11_10m
 
-writeRaster(band11_10m,"band11_10m.tiff", drivername="Gtiff") #exporta la BANDA 11 en .tif
+writeRaster(band11_10m,"banda11.tiff", drivername="Gtiff") #exporta la BANDA 11 en .tif
 
 band12_10m
 
-writeRaster(band12_10m,"band11_10m.tiff", drivername="Gtiff") #exporta la BANDA 12 en .tif
+writeRaster(band12_10m,"banda12.tiff", drivername="Gtiff") #exporta la BANDA 12 en .tif
 
 
 #############################################################################################################################
