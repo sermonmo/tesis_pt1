@@ -240,10 +240,11 @@ stack_variables <- stack(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b12,
 
 brick_variables <- brick(stack_variables)
 
-brick_variables
-
 writeRaster(brick_variables,"brick_variables.tiff", drivername="Gtiff") #Exporta un archivo multicapa con todas las variables
 
+
+
+brick_variables
 
 ##############################################################################################################################
 #BLOQUE 7: LECTURA DE VARIABLES PARA LA CLASIFICACIÓN
