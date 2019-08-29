@@ -1,6 +1,6 @@
 
 #################################################################################################################################
-#BLOQUE 0: INSTALACI覰 DE LIBRERIAS
+#BLOQUE 0: INSTALACI脫N DE LIBRERIAS
 #################################################################################################################################
 
 install.packages("sp")
@@ -30,7 +30,7 @@ getwd()
 
 
 ##################################################################################################################################
-#BLOQUE 2: CONVERSI覰 IMAGENES .JP2 A .TIF (GEOTIFF)
+#BLOQUE 2: CONVERSI脫N IMAGENES .JP2 A .TIF (GEOTIFF)
 ##################################################################################################################################
 
 gdal_translate("bandaAOT.jp2", "bandaAOT_uncut.tif")   #ASIGNAR--- AOT Nombre archivo de entrada y salida
@@ -48,7 +48,7 @@ gdal_translate("bandaTCI.jp2", "bandaTCI_uncut.tif")   #ASIGNAR--- TCI Nombre ar
 gdal_translate("bandaWVP.jp2", "bandaWVP_uncut.tif")   #ASIGNAR--- WVP Nombre archivo de entrada y salida
 
 
-#bandas con resoluci髇 20m en otro directorio
+#bandas con resoluci贸n 20m en otro directorio
 
 gdal_translate("D:/S2_img/bandas_20m/banda11.jp2", "banda11_20m_uncut.tif") #ASIGNAR--- Ruta de archivo B11
 
@@ -57,7 +57,7 @@ gdal_translate("D:/S2_img/bandas_20m/banda12.jp2", "banda12_20m_uncut.tif") #ASI
 
 
 ####################################################################################################################################
-#BLOQUE 3: CORRECCI覰 RESOLUCI覰 BANDA 11 Y 12 A 10m
+#BLOQUE 3: CORRECCI脫N RESOLUCI脫N BANDA 11 Y 12 A 10m
 ####################################################################################################################################
 
 band11_20m <- raster("banda11_20m_uncut.tif")
@@ -77,7 +77,7 @@ writeRaster(band12_10m_uncut,"banda12_uncut.tiff", drivername="Gtiff") #exporta 
 
 
 ####################################################################################################################################
-#BLOQUE 4: DEFINICI覰 DEL 罵EA DE ESTUDIO
+#BLOQUE 4: DEFINICI脫N DEL 脕REA DE ESTUDIO
 ####################################################################################################################################
 
 zona_estudio <- readOGR("D:/s2_img/zona_estudio/zona_estudio.shp") #ASIGNAR--- Ruta de la capa de recorte
@@ -120,7 +120,7 @@ banda12 <- crop(banda12_uncut, zona_estudio)
 writeRaster(banda12, "banda12.tif", drivername="Gtiff")
 
 ####################################################################################################################################
-#BLOQUE 5: COMPOSICI覰 MULTIESPECTRAL
+#BLOQUE 5: COMPOSICI脫N MULTIESPECTRAL
 ####################################################################################################################################
 
 #Orden bandas:
@@ -141,11 +141,11 @@ lay4 <- ("banda08.tif")
 lay5 <- ("banda11.tif")
 lay6 <- ("banda12.tif")
 
-#composici髇 tipo stack
+#composici贸n tipo stack
 
 comp_mult_ST <- stack(lay1, lay2, lay3, lay4, lay5, lay6)
 
-#composici髇 tipo brick
+#composici贸n tipo brick
 
 comp_mult_BR <- brick(comp_mult_ST)
 
@@ -153,7 +153,7 @@ writeRaster(comp_mult_BR, "comp_multiespectral.tif", drivername="Gtiff") #export
 
 
 #####################################################################################################################################
-#BLOQUE 6: C罫CULO DE 蚇DICES DE VEGETACI覰, HUMEDAD Y OTROS
+#BLOQUE 6: C脕LCULO DE 脥NDICES DE VEGETACI脫N, HUMEDAD Y OTROS
 #####################################################################################################################################
 
 L4 <- raster(comp_mult_BR, layer=4) #NIR=Banda 8 Sentinel-2
@@ -188,7 +188,7 @@ rg = L3/L2
 writeRaster(rg,"rg.tiff", drivername="Gtiff") #exporta la capa RG en .tif
 
 #NRVI
-nrvi = rvi-1/rvi+1 ## ## ## DUDA EN LA ECUACI覰 ## ## ##
+nrvi = rvi-1/rvi+1 ## ## ## DUDA EN LA ECUACI脫N ## ## ##
 writeRaster(nrvi,"nrvi.tiff", drivername="Gtiff") #exporta la capa NRVI en .tif
 
 #NDWI11
@@ -209,7 +209,7 @@ writeRaster(ttvi,"ttvi.tiff", drivername="Gtiff") #exporta la capa TTVI en .tif
 
 
 ##############################################################
-#ESPACIO RESERVADO PARA EL C罫CULO DEL CANOPY HEIGH MODEL
+#ESPACIO RESERVADO PARA EL C脕LCULO DEL CANOPY HEIGH MODEL
 ##############################################################
 
 #mdt <- ("ruta_mdt.tif")
@@ -220,14 +220,14 @@ writeRaster(ttvi,"ttvi.tiff", drivername="Gtiff") #exporta la capa TTVI en .tif
 
 #writeRaster(chm,"chm.tiff", drivername="Gtiff") #exporta la capa CHM en .tif
 
-#NOTA: El CHM debe de tener el mismo tama駉 de pixel que el resto de bandas (10x10)
-#En caso de no tener la misma, y que la del CHM sea menor (<10x10), es preferible reducir la resoluci髇 del resto de bandas
-#que aumentar la resoluci髇 de CHM, ya que de esta manera perder韆mos la resoluci髇 del CHM
+#NOTA: El CHM debe de tener el mismo tama帽o de pixel que el resto de bandas (10x10)
+#En caso de no tener la misma, y que la del CHM sea menor (<10x10), es preferible reducir la resoluci贸n del resto de bandas
+#que aumentar la resoluci贸n de CHM, ya que de esta manera perder铆amos la resoluci贸n del CHM
 
 
 
 #####################################################################################################################################
-#BLOQUE 7: COMPOSICI覰 MULTIBANDA DE VARIABLES EXPLICATIVAS
+#BLOQUE 7: COMPOSICI脫N MULTIBANDA DE VARIABLES EXPLICATIVAS
 #####################################################################################################################################
 
 getwd()
@@ -268,10 +268,72 @@ brick_variables
 
 
 #####################################################################################################################################
-#BLOQUE 7: LECTURA DE DATOS DE ENTRENAMIENTO PARA LOS DISTINTOS MODELOS
+#BLOQUE 7: LECTURA DE VARIABLES PARA LA CLASIFICACI脫N
 #####################################################################################################################################
 
+#lectura de la imagen a clasificar
 
+img <- brick("comp_variables.tif")
+
+img
+
+#abreviaci贸n de los nombres si es necesario
+#names(img) <- c(paste0("B, 1:20, coll = ""), "B20")
+
+img
+
+#lectura de los rois de entrenamiento
+
+trainData <- shapefile("D:/s2_img/datos_entrenamiento/datos_entrenamiento.shp")
+responseCol <- "class" #el shapefile debe contener un 煤nico campo con nombre "class"
+
+trainData
+
+#extracci贸n de valores de pixel en las 谩reas de entrenamiento
+
+dfAll = data.frame(matrix(vector(), nrow = 0, ncol = length(names(img)) + 1))   
+for (i in 1:length(unique(trainData[[responseCol]]))){
+  category <- unique(trainData[[responseCol]])[i]
+  categorymap <- trainData[trainData[[responseCol]] == category,]
+  dataSet <- extract(img, categorymap)
+  if(is(trainData, "SpatialPointsDataFrame")){
+    dataSet <- cbind(dataSet, class = as.numeric(rep(category, nrow(dataSet))))
+    dfAll <- rbind(dfAll, dataSet[complete.cases(dataSet),])
+  }
+  if(is(trainData, "SpatialPolygonsDataFrame")){
+    dataSet <- dataSet[!unlist(lapply(dataSet, is.null))]
+    dataSet <- lapply(dataSet, function(x){cbind(x, class = as.numeric(rep(category, nrow(x))))})
+    df <- do.call("rbind", dataSet)
+    dfAll <- rbind(dfAll, df)
+  }
+}
+
+#reducci贸n de la muestra a 1000
+
+nsamples <- 1000
+sdfAll <- dfAll[sample(1:nrow(dfAll), nsamples), ]
+
+
+##############################################################################################################################
+#BLOQUE 8: ENTRENAMIENTO DEL MODELO Y PREDICCI脫N MEDIANTE RANDOM FOREST (RF)
+##############################################################################################################################
+
+#entrenamiento del modelo RF
+
+modFit_rf <- train(as.factor(class) ~ B1 + B2 + B3 + B4 + B5 + B6 + B7 + B8 + B9 + B10 + B11 + B12 + B13 + B14 + B15 + B16 + B17 + B18 + B19 + B20, method = "rf", data = sdfAll) #RF por defecto 500 arboles
+
+#predicci贸n RF
+
+beginCluster()
+preds_rf <- clusterR(img, raster::predict, args = list(model = modFit_rf))
+endCluster()
+
+
+##############################################################################################################################
+#BLOQUE 9: ENTRENAMIENTO DEL MODELO Y PREDICCI脫N MEDIANTE SUPPORT VECTOR MACHINE (SVM)
+##############################################################################################################################
+
+#entrenamiento del modelo SVM
 
 
 
