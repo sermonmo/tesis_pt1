@@ -1,0 +1,1283 @@
+CLASIFICACION BASADA EN OBJETOS
+Natalia Martinez Zarate Octubre de 2018
+https://rpubs.com/NataliaMZ/430067
+
+
+Nota: Este cuaderno se realizo con base en el script de R realizado por el Centro de Biodiversidad y conservacion del Museo Americano de Historia Natural en Octubre del año 2013.
+
+INTRODUCCION
+La clasificación de imágenes satelitales es considerada un proceso de transformación de las imágenes donde se realiza un reconocimiento de las características o patrones de dicha imagen, convirtiendo los tonos continuos en datos temáticos o mapas que evidencian dicha información. El proceso consiste en agrupar los pixeles de una imagen en grupos o subespacios que tienen iguales características utilizando un patrón que actúa como referencia de acuerdo al subespacio en que se encuentra, estas agrupaciones representan las diferentes clases o categorías de interes que conforman la imagen (Karlsson, 2003). Para llevar a cabo una clasificación se deben tener en cuenta factores que están directamente relacionados con las necesidades del usuario e incluyen: la resolución espacial de las imágenes disponibles para el trabajo, la compatibilidad con el trabajo previo, el algoritmo de clasificación a utilizar y el procesamiento de las imágenes (CRCSI, 2017).
+
+La base de muchas aplicaciones de recursos terrestres como la gestión forestal, estimación de cubierta de nieve, análisis geológicos, cobertura y uso de la tierra, entre otras aplicaciones; es la clasificación de imágenes (Zeeshan, Qazi y Aslam, 2018). Las diferentes coberturas de la tierra reflejan y emiten energía electromagnética de diferentes maneras las cuales se registran en diferentes valores espectrales en una imagen, donde cada patrón espectral implica la identificación de dichos valores típicos para las características de la imagen y la agrupación de pixeles con valores similares a los valores de las características.
+
+Para la clasificación de imágenes satelitales es necesario llevar a cabo una serie de procesos o etapas como: la definición de las clases de interés presentes en la imagen, la asignación pixeles a una de las clases, evaluación de las asignaciones, definición de más clases o agrupación de algunas clases y la evaluación y precisión de las categorías etiquetadas en la interpretación (CRCSI, 2017). Todas estas etapas consumen tiempo y recursos computacionales, aun así, son necesarias para la obtención de resultados confiables.
+
+Dentro de las etapas anteriormente mencionadas, es importante la selección del número apropiado y tipo de muestras de entrenamiento, de acuerdo con los datos de referencia de la tierra y resolución espacial de la imagen (Jensen, 2005).
+
+Existen diferentes métodos de clasificación de imágenes basados en redes neuronales, artificiales, arboles de decisión, conjuntos borrosos, técnicas neuro difusas y sistemas expertos. Estos métodos se pueden categorizar como métodos de clasificacion supervisada, no supervisada y basada en objetos. La siguente figura resume de los diferentes métodos de clasificación de imágenes
+
+Clasificación Supervisada es aquella donde el analista tiene una participación activa en el proceso, ya que es la persona que lo realiza y quien indica cómo se realiza la clasificación de cada uno de los pixeles de la imagen, mediante la definición de áreas de entrenamiento que se conocen por la naturaleza de la superficie. Los pasos necesarios para llevar a cabo este tipo de clasificacion son: el conocimiento del área de estudio para la seleccion de sitios de entrenamiento de acuerdo las coberturas presentes en el terreno y el interes del estudio, estos lugares de entrenamiento deben ser representativos de cada cobertura. Una vez definidos los lugares de entrenamiento se selecciona el método de clasificación paramétrico (distribución normal) o no paramétrico (distribución no normal). Por ultimo se realiza una evaluación de la clasificación utilizando algunos de los sitios de entrenamiento inicialmente seleccionados pero que no debieron ser incluidos para llevar a cabo la clasificación.
+Clasificacion No supervisada, es aquella en la que el analista valida el resultado de la clasificación, es decir el usuario influencia unicamente la selección del algoritmo de clasificación (Jensen, 2005; Singh y Kant 2016, del Toro, 2015). Para esta clasificación se utilizan algoritmos, los cuales realizan automáticamente la identificación de aquellos grupos que son diferentes de los ejemplos de entrenamiento en un espacio de características, donde se buscan las diferentes clases espectrales.
+Clasificación Basada en objetos, donde se realiza un análisis basado en grupos de pixeles, es un análisis que se realiza en imágnes con una alta resolucion.
+Este cuaderno tiene como objetivo realizar la clasificacion basada en objetos de la imagén Landsat8 perteneciente a la zona de estudio.
+
+MARCO TEORICO
+Clasificación basada en objetos
+Es una clasificación similar a la supervisada y no supervisada , sin embargo, su análisis esta basado en la información que tienen un conjunto de pixeles con características similares no solo espectralmente sino también en tamaño, textura, forma al igual que el contexto que los rodea, los cuales son llamados objetos (Rodríguez, 2011). La clasificación basada en objetos surge por la necesidad de extraer y comprender la información de las imágenes que no necesariamente se encuentra incluida en pixeles individuales, sino en objetos que representan la importancia de la informacion de una imagen, prmitiendo incluir aspectos de textura importante para el desarrollo de muchos estudios, siendo esta descuidada en las clasificaciones comunes (Blaschke et al. 2002).
+
+Para realizar esta clasificación lo primero que se debe hacer es separar la imagen por objetos, proceso al cual se le llama segmentación , con la segmentacion se realiza la realizar la segmentación de la imágen se realiza la clasificación que para el caso particular ser utilizó el clasificador random forest (Parte III). Una vez clasificada la imagen se pueden presentar errores que pueden ser mejorados mediante una edicion, donde se pueden mejorando los datos de entrenamiento o corregir manualmente cada polígono que quedó mal clasificado, mejorando asi la clasificación general de la imágen (Parte IV).
+
+Segmentación (Parte I)
+La segmentación es una de las soluciones que se ha dado para incluir información de vecindad, donde se realiza una división de la imagen en regiones u objetos homogeneos de acuerdo a los intereses del usuario. La segmentación de las imagenes es paso previo para el análisis por objetos (Blaschke et al. 2002).
+
+Orfeo Toolbox es una biblioteca que cuenta con diferentes algoritmos de segmentación para imagen multiespectral. Para este ejercicio se utilizó el algoritmo de suavizado de la imagen “MeanShift”" el cual conserva el borde iterativo utilizando los siguientes parametros (OrfeoToolbox, 2018).
+
+Imagen de entrada: Puede ser una imagen única o multibanda.
+Salida filtrada espectral: Es la imagen de salida que contiene las firmas espectrales promedio finales de cada píxel. Esta salida debe ser al menos del mismo ancho de la imagen de entrada.
+Salida de desplazamiento filtrado espacial: Esta imagen de salida contiene el desplazamiento 2D entre la posición espacial del píxel de entrada y la posición final después de la convergencia.
+RAM disponible (Mb): memoria disponible para procesamiento (en MB).
+Radio espacial: Radio de la vecindad espacial para promediar. Los valores más altos darán como resultado un mayor suavizado y un mayor tiempo de procesamiento.El valor utilizado en este parámetro fue de 1.
+Radio de rango: Hace referencia al umbral en la distancia euclidiana de la firma espectral (expresada en una unidad de radiometría) para considerar el píxel de vecindario para el promedio. Los valores más altos serán menos conservadores de bordes (más similar al promedio simple en la vecindad), mientras que los valores más bajos darán como resultado un menor suavizado de ruido. El valor utilizádo fue de 3.
+Umbral de convergencia de modo: el algoritmo se detendrá si la actualización de la firma espectral promedio y la posición espacial está por debajo de este umbral.
+Número máximo de iteraciones: el algoritmo se detendrá si no se alcanza el umbral de convergencia después del número máximo de iteraciones.
+Coeficiente de rampa del radio de alcance: varíe el radio de alcance de forma lineal con la intensidad de píxel central (experimental).
+Búsqueda de modo: si el píxel activado, la convergencia iterativa se detiene si la ruta cruza un píxel ya convergente.
+El funcionamiento del algoritmo es de la siguiente manera (OrfeoToolbox, 2018): 1a iteracion: el valor filtrado corresponde a la firma espectral promedio de los pixeles de vecindad que se epacialmente se encuentran mas cerca que el parámetro del radio espacial y con la firma espectral que tiene una distancia euclidiana a la entrada del pixel mas bajo del radio de alcance; es decir los pixeles que estan tanto en espacio como en firmas espectrales. Iteraciones subiguientes: repiten el proceso anteriro considerando que la firma de los pixeles corresponde a la firma espectral promedio calculada en la iteracion anteriro y la posicion de los pixeles a la posicion promedio de los pixeles utilizados para calcular la firma promedio. El algoritmo se detiene en el momento en el que la posición espacial alcanza un pixel que ya ha pasado por el mismo punto
+
+Clasificador Random Forest (RF)
+Es un algoritmo de clasificación supervisado el cual consiste en una técnica de aprendizaje por conjuntos de clasificación y de regresión, es ampliamente utilizado para modelado predictivo y aprendizaje automático. Como su nombre indica es la creación de un bosque y hacerlo aleatorio, donde existe una relación directa de la cantidad de árboles en el bosque y los resultados que se obtienen, a mayor cantidad de arboles más preciso es el resultado. Este algoritmo tiene aplicaciones no solo para la agricultura sino para diferentes áreas como la medicina, bolsa, comercio, etc. Algunas de las ventajas y desventajas de esta técnica son (del Toro et al., 2013; Rodríguez et al., 2011; Breiman, 2004): Ventajas: - Es uno de los algoritmos con mayor precisión de uso actual. - Es eficiente para grandes bases de datos. - Puede manejar gran numero de variables de entrada sin eliminarlas. - Estima datos faltantes y mantiene la precisión cuando exista falta de gran numero de datos. Desventajas: - La experiencia o el conocimiento de quien lleva a cabo la clasificación puede condicionar la calidad de los resultados obtenidos.
+
+El presente trabajo tiene como objetivo realizar la clasificación de coberturas de la imagen correspondiente a la zona de estudio seleccionada en el municipio del Méta - piedemonte llanero y verificar la exactitud temática de la clasificación realizada, mediante la técnica de clasificación supervisada utilizando random forest.
+
+METODOLOGÍA
+Area de estudio
+El área seleccionada se encuentra ubicada en el piedemonte llanero municipio de Villavicencio, departamento del Meta - Colombia y cuenta con un área total de 2.747,7Ha. La temperatura promedio es de 27°C con temperaturas minima de 19.3°C y maxima de 31°C, su clima es tropical con epoca de lluvia y sequia bien definidas. Esta zona se caracteriza por su gran riqueza ambiental por ser un ecosistemas que incluye zonas representativas de bosque humedo tropical . Sin embargo en las últimas décadas el modelo económico ha extendido la explotación de hidrocarburos como el petróleo, monocultivos como la palma de aceite y caña de azúcar para la producción de biocombustibles, otros cultivos agrícolas como el arroz, maíz, soya, plátano, etc., y la ganadería extensiva tradicional de esta región (Viloria de la Hoz, 2009; Santacruz, 2010).
+
+Datos
+Para la clasificación se utilizó una imagen Landsat 8 capturada el 14 de agosto de 2017 la cual presenta un porcentaje de nubosidad del 6.49% y su sistema de referencia es WGS 84UTM zona 18. La imagen se recortó con el área de interés y se realizaron un stack con las bandas 2, 3, 4, 5, 6 y 7.
+
+Se utilizó un shp “Entrenamiento” con los datos de entrenamiento, el cual contien puntos de muestra de cada una de las coberturas seleccionadas para realizar la clasificación en la zona de estudio.
+
+Procedimiento
+Una vez descargada la imágen para trabajar y seleccionada la zona se realizó la corrección atmosférica de las bandas seleccionadas para el trabajo, se realizo un stack y se cortaron las bandas por la zona de estudio.
+
+Las librerias utilizadas para realizar el procesamiento en R fúeron las siguientes:
+library(raster)
+## Warning: package 'raster' was built under R version 3.4.4
+## Loading required package: sp
+library(data.table)
+## Warning: package 'data.table' was built under R version 3.4.4
+## 
+## Attaching package: 'data.table'
+## The following object is masked from 'package:raster':
+## 
+##     shift
+library(maptools)
+## Warning: package 'maptools' was built under R version 3.4.4
+## Checking rgeos availability: TRUE
+library(randomForest)
+## Warning: package 'randomForest' was built under R version 3.4.4
+## randomForest 4.6-14
+## Type rfNews() to see new features/changes/bug fixes.
+library(rgdal)
+## rgdal: version: 1.2-16, (SVN revision 701)
+##  Geospatial Data Abstraction Library extensions to R successfully loaded
+##  Loaded GDAL runtime: GDAL 2.2.0, released 2017/04/28
+##  Path to GDAL shared files: C:/Users/Natalia/Documents/R/win-library/3.4/rgdal/gdal
+##  GDAL binary built with GEOS: TRUE 
+##  Loaded PROJ.4 runtime: Rel. 4.9.3, 15 August 2016, [PJ_VERSION: 493]
+##  Path to PROJ.4 shared files: C:/Users/Natalia/Documents/R/win-library/3.4/rgdal/proj
+##  Linking to sp version: 1.2-7
+library(sp)
+library(raster)
+library(ggplot2)
+## 
+## Attaching package: 'ggplot2'
+## The following object is masked from 'package:randomForest':
+## 
+##     margin
+library(rgeos)
+## Warning: package 'rgeos' was built under R version 3.4.4
+## rgeos version: 0.3-26, (SVN revision 560)
+##  GEOS runtime version: 3.6.1-CAPI-1.10.1 r0 
+##  Linking to sp version: 1.2-7 
+##  Polygon checking: TRUE
+library(landsat8)
+## Warning: package 'landsat8' was built under R version 3.4.4
+Codigo
+Este código muestra la primera parte del procesamiento con el cual se inció el proceso, sin embargo al momento de la realizacion del cuaderno no se corrió debido a la demora en el tiempo de procesamiento.
+
+Corrección atmosférica
+setwd("C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat")
+
+Bandas a utilizar
+
+banda2 <- raster("C:/Maestria en Geomatica/Percepcion remota avanzada/Taller  2/Segment_landsat/LC08_L1TP_007057_20170814_20170825_01_T1_B2.TIF")
+banda3 <- raster("C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/LC08_L1TP_007057_20170814_20170825_01_T1_B3.TIF")
+banda4 <- raster("C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/LC08_L1TP_007057_20170814_20170825_01_T1_B4.TIF")
+banda5 <- raster("C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/LC08_L1TP_007057_20170814_20170825_01_T1_B5.TIF")
+banda6 <- raster("C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/LC08_L1TP_007057_20170814_20170825_01_T1_B6.TIF")
+banda7 <- raster("C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/LC08_L1TP_007057_20170814_20170825_01_T1_B7.TIF")
+
+banda2.dn <- as(banda2, 'SpatialGridDataFrame')
+banda2.rad <- radconv(banda2.dn, 1.2532E-02, -62.66107)
+banda3.dn <- as(banda3, 'SpatialGridDataFrame')
+banda3.rad <- radconv(banda3.dn, 1.1548E-02, -57.74164)
+banda4.dn <- as(banda4, 'SpatialGridDataFrame')
+banda4.rad <- radconv(banda4.dn, 9.7382E-03, -48.69100)
+banda5.dn <- as(banda5, 'SpatialGridDataFrame')
+banda5.rad <- radconv(banda5.dn, 5.9593E-03, -29.79646)
+banda6.dn <- as(banda6, 'SpatialGridDataFrame')
+banda6.rad <- radconv(banda6.dn, 1.4820E-03, -7.41011)
+banda7.dn <- as(banda7, 'SpatialGridDataFrame')
+banda7.rad <- radconv(banda7.dn, 4.9952E-04, -2.49760)
+
+Reflectancia. reflconvS(x, Mp, Ap, sunelev)
+
+refb2 <- reflconvS(banda2.dn, 2.0000E-05, -0.100000, 61.24856156)
+refb3 <- reflconvS(banda3.dn, 2.0000E-05, -0.100000, 61.24856156)
+refb4 <- reflconvS(banda4.dn, 2.0000E-05, -0.100000, 61.24856156)
+refb5 <- reflconvS(banda5.dn, 2.0000E-05, -0.100000, 61.24856156)
+refb6 <- reflconvS(banda6.dn, 2.0000E-05, -0.100000, 61.24856156)
+refb7 <- reflconvS(banda7.dn, 2.0000E-05, -0.100000, 61.24856156)
+
+Para poder ralizar la union de las bandas es necesario transformar el formato Spatialgriddataframe a formato raster     refb1 <- as(refb1, 'RasterLayer') plot(refb1)
+
+refb2 <- as(refb2, 'RasterLayer')
+refb3 <- as(refb3, 'RasterLayer')
+refb4 <- as(refb4, 'RasterLayer')
+refb5 <- as(refb5, 'RasterLayer')
+refb6 <- as(refb6, 'RasterLayer')
+refb7 <- as(refb7, 'RasterLayer')
+
+Union de bandas
+
+bandas <- brick(refb2, refb3, refb4, refb5, refb6, refb7)
+
+cortar por zona de estudio
+
+zona <- shapefile("C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/Area_est.shp")
+
+bandas <- crop(bandas, extent(zona))
+bandas <- mask(bandas, zona)
+
+writeRaster(bandas, filename="zonaest.tif", overwrite=TRUE)
+
+Ploteo en color verdadero
+plotRGB(bandas, r=3, g=2, b=1, scale=10000, stretch="lin", main="Composicion a color verdadero zona de estudio")
+Parte I - Segmentación
+Para realizar la segmentación de la imágen se utilizó el software QGIS con la biblioteca Orfeo Toolbox. Los parametros utilizado fueron los siguientes:
+
+Parametros	Valores seleccionados
+Radio espacial | 1 Rango del radio | 3 Umbral de convergencia de modo | 0.1 Maximo número de iteraciones | 100 Minimo tamaño de region | 10
+
+Parte II Creación de segmentos
+En este script se calculan las caracteristicas de la imagen segmentada utilizando el enfoque de estadisticas zonales. Las entradas son el stack de la imagen seleccionada y el shp o el raster de la imagen segmentada. Como resultado se obtiene un archivo con extensión (CSV) que sirve como entrada para el script de la parte III de clasificación de la imagen, el cual contiene el ID del segmento para cada segmento de la imagen segmentada y varias columnas con la informacion caracteristica de cada segmento.
+
+Las características que calcula son: - Promedio, desviacion estandar y media para cada banda de la imagen - Media, desviacion estandar y coeficiente de variación para cada banda despues de eliminar el 40% de los pixeles al recortar el 20% de los pixeles con los DN mas altos para reducir lso efectos de los pixeles atípicos incluidos en el segmento.
+
+Set de datos
+Nombre y ruta de la imagen 
+satImage <- "C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/zonaest.tif"
+
+Nombre y ruta del vector de la imagen segmentada. Si se usa una imagen raster por segmentos se utilizan dos comillas dobles o sencillas.Sin espacios entre ellas.
+segVector <- 'C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/seg2.shp'
+
+Etiqueta para el campo de atributo en el shapefile que tiene los segmentos IDs. Esto se ignora si los datos de los segmentos vienen con la imagen. 
+idAttributeLabel <- "DN"
+
+Nombre y ruta de la imagen segmentada. Si se utiliza un archivo vetor de segmentos utilizar comillas dobles o sencillas sin espacio entre ellas.
+segImage <- ""
+
+Nombre y ruta del archivo CSV de salida
+outFeatures <- "C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/SegmentFeature_Subras3.csv"
+
+Para los no valores de la imagen de entrada.
+ndSat <- 0
+""
+ No valores de la imagen segmentada.
+ndSeg <- -1
+###########################################################################################
+
+Inicio del proceso
+startTime <- Sys.time()
+cat("Start time", format(startTime),"\n")
+
+Definición de la funcion para calcular las características de cada segmento.
+Funcioón para calcular promedio despes de recortar el 20% superior e inferior de los valores.
+clippedMeanFun <- function(nums,...) {
+ a=quantile(nums, probs=seq(0,1,0.2), na.rm = TRUE)
+ mean(nums[which(nums >= a[2] & nums <= a[5])])
+}
+
+ Función para calcular la desviación estandar despues de recortar el 20% superior e inferior de los valores.
+clippedSDFun <- function(nums,...) {
+a=quantile(nums, probs=seq(0,1,0.2), na.rm = TRUE)
+sd(nums[which(nums >= a[2] & nums <= a[5])])
+}
+
+ Función para calcular el coeficiente de variacion despues de recortan el 20% superior e inferior de los valores.
+clippedCVFun <- function(nums,...) {
+a=quantile(nums, probs=seq(0,1,0.2), na.rm = TRUE)
+as.double(cv(nums[which(nums >= a[2] & nums <= a[5])]))
+}
+
+ Función para calcular la mediana, ya que la tabla de datos tiene problemas con la mediana de los datos enteros 
+medianFun <- function(nums,...) {
+median(as.double(nums), na.rm = TRUE)
+}
+
+Función para crear etiquetas de las columnas para que coincida con el número de bandas de la imagen.
+createColLabels <- function(numBands, baseName) {
+labels <- "segnumber"
+for (i in 1:numBands) {
+  labels[i+1] <- paste(baseName, "Band", i, sep='')
+ }
+labels
+}
+
+ Cargar las imagenes que se van a utilizar para crear las características de segmento
+cat("Reading satellite image\n")
+satelliteImage <- stack(satImage)
+for (b in 1:nlayers(satelliteImage)) { NAvalue(satelliteImage@layers[[b]]) <- ndSat }
+
+Determinar si se va a utilizar la imagen completa o por segmentos. 
+Si segVector tiene una ruta y los nombres de archivos del proceso otro, se bloquea el código.
+if (segVector != '' & segImage == '') { 
+ cat("Reading vector segments\n")
+ vec <- maptools::readShapePoly(segVector)
+   allAtt <- slot(vec, "data")
+ numRows <- nrow(allAtt)
+
+zonalMean <- matrix(nrow=0, ncol=nlayers(satelliteImage)+1)  
+zonalSD <- matrix(nrow=0, ncol=nlayers(satelliteImage)+1)
+zonalClippedMean <- matrix(nrow=0, ncol=nlayers(satelliteImage)+1)
+zonalClippedSD <- matrix(nrow=0, ncol=nlayers(satelliteImage)+1)
+zonalMedian <- matrix(nrow=0, ncol=nlayers(satelliteImage)+1)
+zonalCV <- matrix(nrow=0, ncol=nlayers(satelliteImage)+1)
+zonalClippedCV  <- matrix(nrow=0, ncol=nlayers(satelliteImage)+1)
+
+  for (x in 1:numRows) {
+ for (x in 1:5) {
+segPoly<- vec[vec[[idAttributeLabel]]==allAtt[x,idAttributeLabel],]
+
+Calculo de estadísticas de la zoona
+zonalMean <- rbind(zonalMean, c(x, extract(satelliteImage, segPoly, fun=mean, na.rm = TRUE)))
+zonalSD <- rbind(zonalSD, c(x,extract(satelliteImage, segPoly, fun=sd, na.rm = TRUE)))
+zonalClippedMean <- rbind(zonalClippedMean, c(x,extract(satelliteImage, segPoly, fun=clippedMeanFun, na.rm = TRUE)))
+zonalClippedSD <- rbind(zonalClippedSD, c(x,extract(satelliteImage, segPoly, fun=clippedSDFun, na.rm = TRUE)))
+zonalMedian <- rbind(zonalMedian, c(x,extract(satelliteImage, segPoly, fun=medianFun, na.rm = TRUE)))
+zonalCV <- rbind(zonalSD, c(x,extract(satelliteImage, segPoly, fun=cv, na.rm = TRUE)))
+zonalClippedCV <- rbind(zonalClippedMean, c(x,extract(satelliteImage, segPoly, fun=clippedCVFun, na.rm = TRUE)))
+
+cat("Processing segment", x, "of",numRows, "\r")
+ }
+  zonalMean <- as.data.frame(zonalMean)
+  zonalSD <- as.data.frame(zonalSD)
+  zonalClippedMean <- as.data.frame(zonalClippedMean)
+  zonalClippedSD <- as.data.frame(zonalClippedSD)
+  zonalMedian <- as.data.frame(zonalMedian)
+  zonalCV <- as.data.frame(zonalCV)
+  zonalClippedCV <- as.data.frame(zonalClippedCV)
+  cat("\nFinished processing polygons\n")
+
+   Volver a etiquetar los encabezados de las columnas de la tabla de datos
+  meanLab <- createColLabels(nlayers(satelliteImage), "mean")
+  colnames(zonalMean) <- meanLab
+  sdLab <- createColLabels(nlayers(satelliteImage), "sd")
+  colnames(zonalSD) <- sdLab
+  clipMeanLab <- createColLabels(nlayers(satelliteImage), "clpMean")
+  colnames(zonalClippedMean) <- clipMeanLab
+  clipSDLab <- createColLabels(nlayers(satelliteImage), "clpSD")
+  colnames(zonalClippedSD) <- clipSDLab
+  medianLab <- createColLabels(nlayers(satelliteImage), "median")
+  colnames(zonalMedian) <- medianLab
+  cvLab <- createColLabels(nlayers(satelliteImage), "cv")
+  colnames(zonalCV) <- cvLab
+  clipCVLab <- createColLabels(nlayers(satelliteImage), "clpCV")
+  colnames(zonalClippedCV) <- clipCVLab
+
+  Si segImage tiene una ruta y el nombre de los archivos de los procesos otra, bloquea el código
+  } else if (segVector == '' & segImage != '') {
+  cat("Reading raster segments\n")
+  segmentImage <- raster(segImage)
+  NAvalue(segmentImage) <- ndSeg
+
+  Preparar valores de segmento para cálculos estadísticos de las zonas
+  cat("Calculating zonal statistics\n")
+  vals <- getValues(satelliteImage)
+  zones <- round(getValues(segmentImage), digits = 0)
+  rasterDT <- data.table(vals, z=zones)
+  setkey(rasterDT, z)
+
+  Calculo de estadísticas de zonas
+  zonalMean <- rasterDT[, lapply(.SD, "mean", na.rm = TRUE), by=z]
+  zonalSD <- rasterDT[, lapply(.SD, "sd", na.rm = TRUE), by=z]
+  zonalClippedMean <- rasterDT[,lapply(.SD, clippedMeanFun), by =z]
+  zonalClippedSD <- rasterDT[,lapply(.SD, clippedSDFun), by =z]
+  zonalMedian <- rasterDT[, lapply(.SD, medianFun), by=z]
+  zonalCV <- rasterDT[, lapply(.SD, "cv", na.rm = TRUE), by=z]
+  zonalClippedCV <- rasterDT[,lapply(.SD, clippedCVFun), by =z]
+
+  Volver a etiquetar los encabezados de las columnas de la tabla de datos
+  meanLab <- createColLabels(nlayers(satelliteImage), "mean")
+  setnames(zonalMean, 1:(nlayers(satelliteImage)+1), meanLab)
+  sdLab <- createColLabels(nlayers(satelliteImage), "sd")
+  setnames(zonalSD, 1:(nlayers(satelliteImage)+1), sdLab)
+  clipMeanLab <- createColLabels(nlayers(satelliteImage), "clpMean")
+  setnames(zonalClippedMean, 1:(nlayers(satelliteImage)+1), clipMeanLab)
+  clipSDLab <- createColLabels(nlayers(satelliteImage), "clpSD")
+  setnames(zonalClippedSD, 1:(nlayers(satelliteImage)+1), clipSDLab)
+  medianLab <- createColLabels(nlayers(satelliteImage), "median")
+  setnames(zonalMedian, 1:(nlayers(satelliteImage)+1), medianLab)
+  cvLab <- createColLabels(nlayers(satelliteImage), "cv")
+  setnames(zonalCV, 1:(nlayers(satelliteImage)+1), cvLab)
+  clipCVLab <- createColLabels(nlayers(satelliteImage), "clpCV")
+  setnames(zonalClippedCV, 1:(nlayers(satelliteImage)+1), clipCVLab)
+
+  Si los parametros segImage or segVector no estan correctamente configurados, se muestra un mensaje y se detiene el   proceso
+} else {
+cat("\n\n*****************************************************************************")
+cat("\nOne and only one of the variables segImage or segVector can have a file path and name\n")
+cat("and the other variable must be two quotes (single or double) with no space between them.\n\n")
+stop("Change the values for segImage or segVector and then restart the script\n\n", call.=FALSE)
+}
+
+Combina los resultados en una sola tabla de variables de entorno 
+meanSDMerge <- merge(zonalMean, zonalSD)
+clippedmeanSDMerge <- merge(zonalClippedMean, zonalClippedSD)
+trainValsTemp1 <- merge(meanSDMerge, clippedmeanSDMerge)
+trainValsTemp2 <- merge(trainValsTemp1, zonalMedian)
+cvMerge <- merge(zonalCV, zonalClippedCV)
+trainVals <- merge(trainValsTemp2, cvMerge)
+setwd("C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat")
+
+Guardar archivo CSV
+write.csv(trainVals, file=outFeatures, row.names=FALSE)
+
+Calculo del tiempo de procesameintoCalculate processing time
+timeDiff <- Sys.time() - startTime
+cat("Processing time", format(timeDiff), "\n")
+3
+
+Parte III - Clasificación
+Esta parte del script realiza la clasificación de la imagen se utilizando el clasificador random forest. Las entradas que utiliza para el proceso son: el archivo CVS generaro el script de la parte II, adicionalmente se utiliza la el raster de la imagen segmentada y finalmente se necesita el archivo vector que tiene los puntos o poligonos de entrenamiento, para esta práctica se realizo con puntos, en general el uso de puntos agiliza mas el proceso que el uso de un vector con poligonos ya que entre mas pixeles cubran las caracteristicas del vector se hace mas lento el script. Es importante especificar el nombre de la columna que contiene la variable de respuesta y que la proyección del vector sea la misma de la imagen.
+
+Los resultados de esta seccion son la imagen clasificada en formato GeoTiff, al igual que un archivo shp que contiene
+
+# Nombre y ubicación del archivo CSV resultante CSV de la Parte II de este cuaderno
+segCsv <- "C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/SegmentFeature_Subras3.csv"
+
+
+# Nombre y ubicación del raster de la imagen segmentada  
+segImage <- "C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/Raster_seg2.tif"
+
+# No valores de la raster segmentado.
+nd <- 1
+
+# Nombre y ubicacion de la imagen clasificada.
+outImage <- 'C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/Forest_NonforestMapTest_v9.tif'
+
+# Nombre y ubicacion del shp de puntos de salida de la parte II del cuaderno. Si esta salida no se necesita se puede poner dos comillas dobles o sencillas
+# Importante tener en cuenta que si este archivo existe, la escritura fallará con el mensaje "Falló la creación del archivo de salida".
+outMarginFile <- 'C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/testAccuracyPoints8.shp'
+
+# Nombre del conjunto de datos para el archivo vectorial que contiene datos de entrenamiento.
+# Esta y "layer" estan definidos por el controlador ORG.
+trainingDsn <- 'C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/Entrenamiento.shp'
+
+# Nombre de la capa para el archivo vectorial 
+trainingLayer <- 'Entrenamiento'
+
+# Nombre de la columna que contiene el numero de clase
+classNum <- "Id_Type"
+
+# Archivo CSV de salica con la informacion de mapeo de clase. Si esta salida no se necesita se puede utilizar comillas dobles o sencillas.
+outClassMapCSV <- 'C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/classMapping_v2.csv'
+
+# Clasificación de salida sin aplicar limites (Output classification without applying threshold (Verdadero o Falso)
+classImage <- TRUE
+
+# Probabilidad de salida de la imagen (Verdadero o Falso)
+probImage <- TRUE
+
+# Clasificacion de salida y set de pixeles con limite de 0 (Verdadero o Falso)
+threshImage <- TRUE
+
+# Enter threshold probability in percent (values must be between 0 and 100) only used if threshImage=TRUE
+probThreshold <- 75
+
+###########################################################################################
+## Inicio del proceso
+startTime <- Sys.time()
+cat("Start time", format(startTime),"\n")
+## Start time 2018-10-16 19:49:50
+# Leer archivo vector
+cat("Reading the vector file\n")
+## Reading the vector file
+vec <- readOGR(trainingDsn, trainingLayer)
+## OGR data source with driver: ESRI Shapefile 
+## Source: "C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/Entrenamiento.shp", layer: "Entrenamiento"
+## with 200 features
+## It has 3 fields
+pts <- slot(vec, "data")
+
+# Descargar imagen raster
+segImg <-raster(segImage)
+
+# Etraer el ID de los segmentos bajo las caracteristicas de punto.
+cat("Extracting segment IDs under the vector features\n")
+## Extracting segment IDs under the vector features
+exSegNums <- extract(segImg, vec, cellnumbers=TRUE)
+if (is.matrix(exSegNums)) {
+  exSegNums <- as.list(data.frame(t(exSegNums)))
+}
+
+# Eliminar valores nulos de la listaRemove NULL values from the list
+exSegNums <- exSegNums[!sapply(exSegNums, is.null)]
+
+# Seleccionar el ID de segmetos unicos bajo las caracteristicas de caa vector y asociar al respuesta.
+# variable ("classNum") del segmento ID 
+trainSegs <- matrix(ncol=3, nrow=0)
+for (i in 1:length(exSegNums)) {
+  lineResponse <- pts[i,classNum]
+  if (is.matrix(exSegNums[[i]])) { 
+    segNums <- exSegNums[[i]][which(duplicated(exSegNums[[i]][,2]) == FALSE),]
+  } else {
+    segNums <- exSegNums[[i]]
+  }
+  
+  if (is.matrix(segNums)) {
+    trainSegs <- rbind(trainSegs, cbind(lineResponse, segNums))
+  }
+  else {
+    trainSegs <- rbind(trainSegs, cbind(lineResponse, segNums[1], segNums[2]))
+  }  
+}
+
+# Eliminar nombres de filas y adicionar nombres de columnas. 
+rownames(trainSegs) <- NULL
+colnames(trainSegs) <- c("response", "cellNums", "segNums")
+
+# Eliminr valores de NA del listado del ID del segmento unico, 
+trainSegs_no_na <- as.data.frame(na.omit(trainSegs))
+
+# Leer archivo CSV con la informacion caracteristica del segmento.
+segAtr <- read.csv(segCsv, header=TRUE)
+
+# Eliminar NAs de la tabla de caracteristicas.
+segAtr <- na.omit(segAtr)
+
+# Crear un data set de los datos de entrenamiento haciendo coincidir las ID de segmento de entrenamiento únicos con la información de características del segmento.
+train <- segAtr[match(trainSegs_no_na$segNums, segAtr$segnumber),]
+summary(train)
+##    segnumber        meanBand1       meanBand2       meanBand3    
+##  Min.   :  19.0   Min.   : 9607   Min.   : 8557   Min.   : 7907  
+##  1st Qu.: 430.0   1st Qu.: 9735   1st Qu.: 8752   1st Qu.: 8290  
+##  Median : 775.0   Median : 9936   Median : 9074   Median : 8833  
+##  Mean   : 728.1   Mean   : 9972   Mean   : 9095   Mean   : 8838  
+##  3rd Qu.:1059.0   3rd Qu.:10114   3rd Qu.: 9322   3rd Qu.: 9268  
+##  Max.   :1298.0   Max.   :11282   Max.   :10675   Max.   :11025  
+##  NA's   :8        NA's   :8       NA's   :8       NA's   :8      
+##    meanBand4       meanBand5       meanBand6       meanBand7    
+##  Min.   : 6636   Min.   : 9695   Min.   : 8447   Min.   : 7104  
+##  1st Qu.: 7072   1st Qu.:19032   1st Qu.:12228   1st Qu.: 7867  
+##  Median : 7959   Median :20044   Median :13989   Median : 9175  
+##  Mean   : 7965   Mean   :19846   Mean   :14004   Mean   : 9169  
+##  3rd Qu.: 8488   3rd Qu.:21000   3rd Qu.:15418   3rd Qu.: 9982  
+##  Max.   :11065   Max.   :26618   Max.   :19632   Max.   :13137  
+##  NA's   :8       NA's   :8       NA's   :8       NA's   :8      
+##    meanBand8        sdBand1          sdBand2           sdBand3       
+##  Min.   : 7375   Min.   : 10.05   Min.   :  11.56   Min.   :  28.96  
+##  1st Qu.: 7842   1st Qu.: 31.45   1st Qu.:  43.66   1st Qu.:  80.74  
+##  Median : 8412   Median : 53.45   Median :  79.58   Median : 133.02  
+##  Mean   : 8418   Mean   :111.04   Mean   : 141.16   Mean   : 207.21  
+##  3rd Qu.: 8822   3rd Qu.: 97.01   3rd Qu.: 129.44   3rd Qu.: 208.69  
+##  Max.   :10961   Max.   :821.30   Max.   :1008.23   Max.   :1445.13  
+##  NA's   :8       NA's   :8        NA's   :8         NA's   :8        
+##     sdBand4           sdBand5          sdBand6           sdBand7       
+##  Min.   :  25.09   Min.   : 181.2   Min.   :  97.85   Min.   :  51.69  
+##  1st Qu.: 106.42   1st Qu.: 456.0   1st Qu.: 317.38   1st Qu.: 192.74  
+##  Median : 206.57   Median : 657.3   Median : 489.15   Median : 319.50  
+##  Mean   : 299.08   Mean   : 784.2   Mean   : 604.84   Mean   : 426.64  
+##  3rd Qu.: 312.52   3rd Qu.: 915.3   3rd Qu.: 790.85   3rd Qu.: 528.25  
+##  Max.   :2056.68   Max.   :3029.6   Max.   :3118.05   Max.   :2487.37  
+##  NA's   :8         NA's   :8        NA's   :8         NA's   :8        
+##     sdBand8         clpMeanBand1    clpMeanBand2    clpMeanBand3  
+##  Min.   :  45.64   Min.   : 9607   Min.   : 8559   Min.   : 7874  
+##  1st Qu.: 110.40   1st Qu.: 9735   1st Qu.: 8747   1st Qu.: 8276  
+##  Median : 201.00   Median : 9930   Median : 9064   Median : 8802  
+##  Mean   : 311.63   Mean   : 9958   Mean   : 9078   Mean   : 8818  
+##  3rd Qu.: 323.55   3rd Qu.:10092   3rd Qu.: 9287   3rd Qu.: 9235  
+##  Max.   :1923.49   Max.   :11278   Max.   :10670   Max.   :10988  
+##  NA's   :8         NA's   :8       NA's   :8       NA's   :8      
+##   clpMeanBand4    clpMeanBand5    clpMeanBand6    clpMeanBand7  
+##  Min.   : 6642   Min.   : 9466   Min.   : 8373   Min.   : 6994  
+##  1st Qu.: 7064   1st Qu.:19109   1st Qu.:12133   1st Qu.: 7816  
+##  Median : 7941   Median :20067   Median :13976   Median : 9128  
+##  Mean   : 7933   Mean   :19863   Mean   :13987   Mean   : 9131  
+##  3rd Qu.: 8449   3rd Qu.:20988   3rd Qu.:15412   3rd Qu.: 9978  
+##  Max.   :11058   Max.   :26794   Max.   :19662   Max.   :13112  
+##  NA's   :8       NA's   :8       NA's   :8       NA's   :8      
+##   clpMeanBand8     clpSDBand1        clpSDBand2        clpSDBand3     
+##  Min.   : 7383   Min.   :  5.648   Min.   :  4.736   Min.   :  10.94  
+##  1st Qu.: 7747   1st Qu.: 13.427   1st Qu.: 15.443   1st Qu.:  30.54  
+##  Median : 8383   Median : 22.780   Median : 31.693   Median :  53.55  
+##  Mean   : 8386   Mean   : 50.900   Mean   : 64.372   Mean   :  93.15  
+##  3rd Qu.: 8767   3rd Qu.: 41.665   3rd Qu.: 57.927   3rd Qu.:  88.67  
+##  Max.   :10788   Max.   :524.585   Max.   :683.311   Max.   :1008.83  
+##  NA's   :8       NA's   :8         NA's   :8         NA's   :8        
+##    clpSDBand4         clpSDBand5        clpSDBand6        clpSDBand7     
+##  Min.   :   8.337   Min.   :  70.98   Min.   :  40.38   Min.   :  26.65  
+##  1st Qu.:  38.848   1st Qu.: 185.22   1st Qu.: 130.53   1st Qu.:  75.36  
+##  Median :  74.020   Median : 292.68   Median : 206.23   Median : 127.90  
+##  Mean   : 134.150   Mean   : 367.67   Mean   : 259.79   Mean   : 187.52  
+##  3rd Qu.: 150.960   3rd Qu.: 426.83   3rd Qu.: 328.25   3rd Qu.: 227.85  
+##  Max.   :1533.090   Max.   :1812.33   Max.   :1946.32   Max.   :1608.44  
+##  NA's   :8          NA's   :8         NA's   :8         NA's   :8        
+##    clpSDBand8       medianBand1     medianBand2     medianBand3   
+##  Min.   :  15.83   Min.   : 9607   Min.   : 8561   Min.   : 7872  
+##  1st Qu.:  43.65   1st Qu.: 9728   1st Qu.: 8740   1st Qu.: 8271  
+##  Median :  73.26   Median : 9926   Median : 9049   Median : 8766  
+##  Mean   : 130.77   Mean   : 9951   Mean   : 9068   Mean   : 8806  
+##  3rd Qu.: 125.40   3rd Qu.:10052   3rd Qu.: 9263   3rd Qu.: 9214  
+##  Max.   :1422.80   Max.   :11287   Max.   :10595   Max.   :10860  
+##  NA's   :8         NA's   :8       NA's   :8       NA's   :8      
+##   medianBand4     medianBand5     medianBand6     medianBand7   
+##  Min.   : 6646   Min.   : 9685   Min.   : 8650   Min.   : 7086  
+##  1st Qu.: 7068   1st Qu.:19081   1st Qu.:12125   1st Qu.: 7697  
+##  Median : 7924   Median :20045   Median :13961   Median : 9111  
+##  Mean   : 7918   Mean   :19884   Mean   :13980   Mean   : 9118  
+##  3rd Qu.: 8454   3rd Qu.:20963   3rd Qu.:15308   3rd Qu.: 9977  
+##  Max.   :10898   Max.   :26865   Max.   :19688   Max.   :13229  
+##  NA's   :8       NA's   :8       NA's   :8       NA's   :8      
+##   medianBand8       cvBand1          cvBand2           cvBand3       
+##  Min.   : 7392   Min.   : 10.05   Min.   :  11.56   Min.   :  28.96  
+##  1st Qu.: 7696   1st Qu.: 31.45   1st Qu.:  43.66   1st Qu.:  80.74  
+##  Median : 8357   Median : 53.45   Median :  79.58   Median : 133.02  
+##  Mean   : 8371   Mean   :111.04   Mean   : 141.16   Mean   : 207.21  
+##  3rd Qu.: 8761   3rd Qu.: 97.01   3rd Qu.: 129.44   3rd Qu.: 208.69  
+##  Max.   :10719   Max.   :821.30   Max.   :1008.23   Max.   :1445.13  
+##  NA's   :8       NA's   :8        NA's   :8         NA's   :8        
+##     cvBand4           cvBand5          cvBand6           cvBand7       
+##  Min.   :  25.09   Min.   : 181.2   Min.   :  97.85   Min.   :  51.69  
+##  1st Qu.: 106.42   1st Qu.: 456.0   1st Qu.: 317.38   1st Qu.: 192.74  
+##  Median : 206.57   Median : 657.3   Median : 489.15   Median : 319.50  
+##  Mean   : 299.08   Mean   : 784.2   Mean   : 604.84   Mean   : 426.64  
+##  3rd Qu.: 312.52   3rd Qu.: 915.3   3rd Qu.: 790.85   3rd Qu.: 528.25  
+##  Max.   :2056.68   Max.   :3029.6   Max.   :3118.05   Max.   :2487.37  
+##  NA's   :8         NA's   :8        NA's   :8         NA's   :8        
+##     cvBand8          clpCVBand1      clpCVBand2      clpCVBand3   
+##  Min.   :  45.64   Min.   : 9607   Min.   : 8559   Min.   : 7874  
+##  1st Qu.: 110.40   1st Qu.: 9735   1st Qu.: 8747   1st Qu.: 8276  
+##  Median : 201.00   Median : 9930   Median : 9064   Median : 8802  
+##  Mean   : 311.63   Mean   : 9958   Mean   : 9078   Mean   : 8818  
+##  3rd Qu.: 323.55   3rd Qu.:10092   3rd Qu.: 9287   3rd Qu.: 9235  
+##  Max.   :1923.49   Max.   :11278   Max.   :10670   Max.   :10988  
+##  NA's   :8         NA's   :8       NA's   :8       NA's   :8      
+##    clpCVBand4      clpCVBand5      clpCVBand6      clpCVBand7   
+##  Min.   : 6642   Min.   : 9466   Min.   : 8373   Min.   : 6994  
+##  1st Qu.: 7064   1st Qu.:19109   1st Qu.:12133   1st Qu.: 7816  
+##  Median : 7941   Median :20067   Median :13976   Median : 9128  
+##  Mean   : 7933   Mean   :19863   Mean   :13987   Mean   : 9131  
+##  3rd Qu.: 8449   3rd Qu.:20988   3rd Qu.:15412   3rd Qu.: 9978  
+##  Max.   :11058   Max.   :26794   Max.   :19662   Max.   :13112  
+##  NA's   :8       NA's   :8       NA's   :8       NA's   :8      
+##    clpCVBand8   
+##  Min.   : 7383  
+##  1st Qu.: 7747  
+##  Median : 8383  
+##  Mean   : 8386  
+##  3rd Qu.: 8767  
+##  Max.   :10788  
+##  NA's   :8
+# Eliminar NAs del data frame de entrenamiento
+train_no_na <- as.data.frame(na.omit(train))
+
+# Crear un data frame con los datos variables de respuesta.
+response_no_na <- trainSegs_no_na[match(train_no_na$segnumber, trainSegs_no_na$segNums), c(1,3)]
+
+# Realizar la clasificación con el algoritmo RF.
+cat("Starting to calculate random forest object \n)")
+## Starting to calculate random forest object 
+## )
+randfor <- randomForest(as.factor(response_no_na$response) ~. , data=train_no_na[,-1], proximity=TRUE)
+
+# Escribir la salida forest/nonforest raster map.
+# Redescargar el paquete raster.
+bs <- blockSize(segImg)
+
+# Calcular cuantas bandas de salia de la image pueden Calculate how many bands the output image should have
+numBands <- classImage + probImage + threshImage
+
+# Crear el raster de salida y empezar a escribir sobre el.
+img.out <- brick(segImg, values=FALSE, nl=numBands)
+img.out <- writeStart(img.out, outImage, overwrite=TRUE, datatype='INT1U')
+
+# Predicció
+predValues <- predict(randfor, segAtr, type='response')
+predValuesDF <- data.frame(segAtr$segnumber, predValues)
+
+if (probImage || threshImage) { 
+  predProbs <- predict(randfor, segAtr, type='prob')
+  maxProb <- round(apply(predProbs, 1, max) * 100)
+  maxProbDF <- data.frame(segAtr$segnumber, maxProb)
+}
+
+# Recorre los bloques del ráster de salida de Orfeo y escriba el nuevo valor clasificado.
+# Este método de bucle permite la entrada de rásteres más grandes sin problemas de memoria.
+for (i in 1:bs$n) {
+  cat("processing block", i, "of", bs$n, "\r")
+  img <- getValues(segImg, row=bs$row[i], nrows=bs$nrows[i])
+  outMatrix <- matrix(nrow=length(img), ncol=0)
+  # Establecer el valor sin datos NA, para que no se convierta en un valor predicho
+  is.na(img) <- img == nd
+  if (classImage) {
+    # Convierta el ID de segmento a la clase predicha (numérica) para que se pueda establecer un valor de no_data.
+    outMatrix <- cbind(outMatrix, predValuesDF$predValues[match(img, predValuesDF$segAtr.segnumber)])
+  }
+  if (probImage) { 
+    outMatrix <- cbind(outMatrix, maxProbDF$maxProb[match(img, maxProbDF$segAtr.segnumber)])
+  }
+  if (threshImage) {
+    threshValues <- as.numeric(predValuesDF$predValues[match(img, predValuesDF$segAtr.segnumber)])
+    threshValues[which(maxProbDF$maxProb[match(img, maxProbDF$segAtr.segnumber)] <= probThreshold)] <- 0
+    outMatrix <- cbind(outMatrix,threshValues)
+  }
+  writeValues(img.out, outMatrix, bs$row[i])
+}
+## processing block 1 of 215 
+processing block 2 of 215 
+processing block 3 of 215 
+processing block 4 of 215 
+processing block 5 of 215 
+processing block 6 of 215 
+processing block 7 of 215 
+processing block 8 of 215 
+processing block 9 of 215 
+processing block 10 of 215 
+processing block 11 of 215 
+processing block 12 of 215 
+processing block 13 of 215 
+processing block 14 of 215 
+processing block 15 of 215 
+processing block 16 of 215 
+processing block 17 of 215 
+processing block 18 of 215 
+processing block 19 of 215 
+processing block 20 of 215 
+processing block 21 of 215 
+processing block 22 of 215 
+processing block 23 of 215 
+processing block 24 of 215 
+processing block 25 of 215 
+processing block 26 of 215 
+processing block 27 of 215 
+processing block 28 of 215 
+processing block 29 of 215 
+processing block 30 of 215 
+processing block 31 of 215 
+processing block 32 of 215 
+processing block 33 of 215 
+processing block 34 of 215 
+processing block 35 of 215 
+processing block 36 of 215 
+processing block 37 of 215 
+processing block 38 of 215 
+processing block 39 of 215 
+processing block 40 of 215 
+processing block 41 of 215 
+processing block 42 of 215 
+processing block 43 of 215 
+processing block 44 of 215 
+processing block 45 of 215 
+processing block 46 of 215 
+processing block 47 of 215 
+processing block 48 of 215 
+processing block 49 of 215 
+processing block 50 of 215 
+processing block 51 of 215 
+processing block 52 of 215 
+processing block 53 of 215 
+processing block 54 of 215 
+processing block 55 of 215 
+processing block 56 of 215 
+processing block 57 of 215 
+processing block 58 of 215 
+processing block 59 of 215 
+processing block 60 of 215 
+processing block 61 of 215 
+processing block 62 of 215 
+processing block 63 of 215 
+processing block 64 of 215 
+processing block 65 of 215 
+processing block 66 of 215 
+processing block 67 of 215 
+processing block 68 of 215 
+processing block 69 of 215 
+processing block 70 of 215 
+processing block 71 of 215 
+processing block 72 of 215 
+processing block 73 of 215 
+processing block 74 of 215 
+processing block 75 of 215 
+processing block 76 of 215 
+processing block 77 of 215 
+processing block 78 of 215 
+processing block 79 of 215 
+processing block 80 of 215 
+processing block 81 of 215 
+processing block 82 of 215 
+processing block 83 of 215 
+processing block 84 of 215 
+processing block 85 of 215 
+processing block 86 of 215 
+processing block 87 of 215 
+processing block 88 of 215 
+processing block 89 of 215 
+processing block 90 of 215 
+processing block 91 of 215 
+processing block 92 of 215 
+processing block 93 of 215 
+processing block 94 of 215 
+processing block 95 of 215 
+processing block 96 of 215 
+processing block 97 of 215 
+processing block 98 of 215 
+processing block 99 of 215 
+processing block 100 of 215 
+processing block 101 of 215 
+processing block 102 of 215 
+processing block 103 of 215 
+processing block 104 of 215 
+processing block 105 of 215 
+processing block 106 of 215 
+processing block 107 of 215 
+processing block 108 of 215 
+processing block 109 of 215 
+processing block 110 of 215 
+processing block 111 of 215 
+processing block 112 of 215 
+processing block 113 of 215 
+processing block 114 of 215 
+processing block 115 of 215 
+processing block 116 of 215 
+processing block 117 of 215 
+processing block 118 of 215 
+processing block 119 of 215 
+processing block 120 of 215 
+processing block 121 of 215 
+processing block 122 of 215 
+processing block 123 of 215 
+processing block 124 of 215 
+processing block 125 of 215 
+processing block 126 of 215 
+processing block 127 of 215 
+processing block 128 of 215 
+processing block 129 of 215 
+processing block 130 of 215 
+processing block 131 of 215 
+processing block 132 of 215 
+processing block 133 of 215 
+processing block 134 of 215 
+processing block 135 of 215 
+processing block 136 of 215 
+processing block 137 of 215 
+processing block 138 of 215 
+processing block 139 of 215 
+processing block 140 of 215 
+processing block 141 of 215 
+processing block 142 of 215 
+processing block 143 of 215 
+processing block 144 of 215 
+processing block 145 of 215 
+processing block 146 of 215 
+processing block 147 of 215 
+processing block 148 of 215 
+processing block 149 of 215 
+processing block 150 of 215 
+processing block 151 of 215 
+processing block 152 of 215 
+processing block 153 of 215 
+processing block 154 of 215 
+processing block 155 of 215 
+processing block 156 of 215 
+processing block 157 of 215 
+processing block 158 of 215 
+processing block 159 of 215 
+processing block 160 of 215 
+processing block 161 of 215 
+processing block 162 of 215 
+processing block 163 of 215 
+processing block 164 of 215 
+processing block 165 of 215 
+processing block 166 of 215 
+processing block 167 of 215 
+processing block 168 of 215 
+processing block 169 of 215 
+processing block 170 of 215 
+processing block 171 of 215 
+processing block 172 of 215 
+processing block 173 of 215 
+processing block 174 of 215 
+processing block 175 of 215 
+processing block 176 of 215 
+processing block 177 of 215 
+processing block 178 of 215 
+processing block 179 of 215 
+processing block 180 of 215 
+processing block 181 of 215 
+processing block 182 of 215 
+processing block 183 of 215 
+processing block 184 of 215 
+processing block 185 of 215 
+processing block 186 of 215 
+processing block 187 of 215 
+processing block 188 of 215 
+processing block 189 of 215 
+processing block 190 of 215 
+processing block 191 of 215 
+processing block 192 of 215 
+processing block 193 of 215 
+processing block 194 of 215 
+processing block 195 of 215 
+processing block 196 of 215 
+processing block 197 of 215 
+processing block 198 of 215 
+processing block 199 of 215 
+processing block 200 of 215 
+processing block 201 of 215 
+processing block 202 of 215 
+processing block 203 of 215 
+processing block 204 of 215 
+processing block 205 of 215 
+processing block 206 of 215 
+processing block 207 of 215 
+processing block 208 of 215 
+processing block 209 of 215 
+processing block 210 of 215 
+processing block 211 of 215 
+processing block 212 of 215 
+processing block 213 of 215 
+processing block 214 of 215 
+processing block 215 of 215 
+# Terminar salvar y cerrar la covecion de la imagen.
+img.out <- writeStop(img.out)
+
+# Mapa de clase de salida.
+if (outClassMapCSV != "") {
+  write.csv(predValuesDF, file=outClassMapCSV, row.names=FALSE)
+}
+
+# View variable importance plot.
+varImpPlot(randfor)
+
+
+# Imprimir rata de error y matriz de confusion por Print error rate and confusion matrix for this classification
+confMatrix <- randfor$confusion
+cat("\n#################################################################################\n")
+## 
+## #################################################################################
+cat("OOB error rate estimate\n", 1 - (sum(diag(confMatrix)) / sum(confMatrix[,1:ncol(confMatrix)-1])), "%\n\n", sep="")
+## OOB error rate estimate
+## 0.3227513%
+cat("Confusion matrix\n")
+## Confusion matrix
+print(randfor$confusion)
+##     1  2  3  4 5 6 7 8 9 10 class.error
+## 1  13  1  0  0 0 0 0 0 0  0  0.07142857
+## 2   0 35  3  2 1 0 1 0 0  0  0.16666667
+## 3   1  2 23  4 0 0 0 0 0  0  0.23333333
+## 4   0  3  3 49 2 1 1 2 0  0  0.19672131
+## 5   1  0  0  5 3 0 0 0 0  0  0.66666667
+## 6   0  2  0  4 0 1 1 0 0  0  0.87500000
+## 7   0  1  1  7 0 1 0 0 0  0  1.00000000
+## 8   0  0  1  4 0 0 0 4 0  0  0.55555556
+## 9   0  0  1  3 1 0 0 0 0  0  1.00000000
+## 10  1  0  0  0 0 0 0 0 0  0  1.00000000
+cat("\n")
+if (outMarginFile != "") {
+  # Calcular el margen (proporción de votos para la clase correcta menos la proporción máxima de votos para otras clases)
+  marginData <- randomForest::margin(randfor)
+  trainingAccuracy <- cbind(marginData[order(marginData)], trainSegs_no_na[order(marginData),])
+  
+  # Adicionar nombres de columnas de atributos de la tabla
+  colnames(trainingAccuracy) <- c("margin", "classNum", "cellNum", "segID")
+  
+  # Calcular coordenadas X y Y para los datos de entrenamiento de puntos
+  xyCoords <- matrix(ncol=2, nrow=0)
+  for (z in 1:nrow(trainingAccuracy)) {
+    xyCoords <- rbind(xyCoords, xyFromCell(segImg, trainingAccuracy[z,3]))
+  }
+  
+  # Crear y escribir el shp de punto con margen de información para ayudar a mejorer los datos de entrenamiento
+  pointVector <- SpatialPointsDataFrame(xyCoords, trainingAccuracy[, c(1,2,4)], coords.nrs = numeric(0), proj4string = segImg@crs)
+  writeOGR(pointVector, outMarginFile, "layer", driver="ESRI Shapefile", check_exists=TRUE)
+}
+
+# Calculo de tiempo de procedimiento
+timeDiff <- Sys.time() - startTime
+cat("Processing time", format(timeDiff), "\n")
+## Processing time 18.14238 secs
+# Ploteo
+clasificacion = raster("C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/Forest_NonforestMapTest_v9.tif")
+
+cols <- c("aliceblue", "green", "darkgreen", "yellow2", "blue2", "navy", "gray47", "chartreuse1", "red" )
+
+  plot(clasificacion, col = cols, main = "Clasificacion de cobertura ", legend=TRUE)
+
+
+Parte IV - Edición de la clasificación
+Como se mencionó anteriormente este script lo que pretende es mejorar la clasificación realizada haciendo una corrección de los segmentos mal clasificados y tiene como resultado final una nueva imagne clasificada.
+
+# Nombre y ubicacion de de la imagen raster segmentada. 
+segImage <- "C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/Raster_seg2.tif"
+
+# No valores del raster segmentado.
+nd <- 1
+
+# Nombre y ubicacion de la edicion del mapa clasificado
+outImage <- 'C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/Forest_NonforestMapTest_v8.tif'
+
+# Ingresar archivo CSV  de ckassufucacuib y mapas
+inClassMapCSV <- 'C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/classMapping_v2.csv'
+
+# Nombre del conjunto de datos para el archivo de puntos vectoriales que contiene las ubicaciones y asignaciones de clase para los segmentos que se modificarán. 
+editPointsDsn <- 'C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/editSegs.shp'
+
+# Nombre del archivo vector. -este es a menudo  el nombre del archivo sin extensiónThis is often the file name without an extension. 
+editPointsLayer <- 'editSegs'
+
+# Introducir cualquier nombre o numero de columna.
+
+newClassNum <- "newClass"
+###########################################################################################
+## Inicio del proceso
+startTime <- Sys.time()
+cat("Start time", format(startTime),"\n")
+## Start time 2018-10-16 19:50:10
+# Leer el archivo vector
+cat("Reading the vector file\n")
+## Reading the vector file
+vec <- readOGR(editPointsDsn, editPointsLayer)
+## OGR data source with driver: ESRI Shapefile 
+## Source: "C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/editSegs.shp", layer: "editSegs"
+## with 13 features
+## It has 3 fields
+## Integer64 fields read as strings:  Id newClass
+newClass <- slot(vec, "data")
+
+# Load the segment raster image
+segImg <- raster(segImage)
+
+# Abrir archivo CSV
+classMap <- read.csv(inClassMapCSV)
+
+# Extraer el ID de los segmentos, bajo los puntos editados.
+cat("Extracting segment IDs under the points to modify\n")
+## Extracting segment IDs under the points to modify
+changeSegIDs <- cbind(newClass[,newClassNum], extract(segImg, vec))
+
+# Cambiar las clases de mapero con base en los datos punto.
+for (i in 1:nrow(changeSegIDs)) {
+  #classMap[changeSegIDs[i, 2], 2] <- changeSegIDs[i,1]
+  classMap[which(classMap[,1]==changeSegIDs[i, 2]), 2] <- changeSegIDs[i,1]
+}
+
+# Escribir la salida forest/raster map. Forest_NonforestMapTest_v8.
+# REcargar packete raster.
+bs <- blockSize(segImg)
+
+# Crea el raster de salida y comienza a escribir en el
+img.out <- raster(segImg)
+img.out <- writeStart(img.out, outImage, overwrite=TRUE, datatype='INT1U')
+
+# Recorre los bloques del ráster de salida de Orfeo y escriba el nuevo valor clasificado.
+# Este método de bucle permitirá la entrada de rásteres más grandes sin problemas de memoria.
+for (i in 1:bs$n) {
+  cat("processing block", i, "of", bs$n, "\r")
+  # require(raster)
+  img <- getValues(segImg, row=bs$row[i], nrows=bs$nrows[i])
+  # Set the no data value to NA so it doesn't get converted to a predicted value
+  is.na(img) <- img == nd
+  # Convert the segment ID to the predicted (numeric) class so that a nodata value can be set.
+  img.match <- as.numeric(classMap$pred[match(img, classMap$segAtr.segnumber)])
+  # Set the no data value to the default value for the output image
+  img.match[is.na(img.match) == TRUE] <- NAvalue(img.out)
+  writeValues(img.out, img.match, bs$row[i])
+}
+## processing block 1 of 215 
+processing block 2 of 215 
+processing block 3 of 215 
+processing block 4 of 215 
+processing block 5 of 215 
+processing block 6 of 215 
+processing block 7 of 215 
+processing block 8 of 215 
+processing block 9 of 215 
+processing block 10 of 215 
+processing block 11 of 215 
+processing block 12 of 215 
+processing block 13 of 215 
+processing block 14 of 215 
+processing block 15 of 215 
+processing block 16 of 215 
+processing block 17 of 215 
+processing block 18 of 215 
+processing block 19 of 215 
+processing block 20 of 215 
+processing block 21 of 215 
+processing block 22 of 215 
+processing block 23 of 215 
+processing block 24 of 215 
+processing block 25 of 215 
+processing block 26 of 215 
+processing block 27 of 215 
+processing block 28 of 215 
+processing block 29 of 215 
+processing block 30 of 215 
+processing block 31 of 215 
+processing block 32 of 215 
+processing block 33 of 215 
+processing block 34 of 215 
+processing block 35 of 215 
+processing block 36 of 215 
+processing block 37 of 215 
+processing block 38 of 215 
+processing block 39 of 215 
+processing block 40 of 215 
+processing block 41 of 215 
+processing block 42 of 215 
+processing block 43 of 215 
+processing block 44 of 215 
+processing block 45 of 215 
+processing block 46 of 215 
+processing block 47 of 215 
+processing block 48 of 215 
+processing block 49 of 215 
+processing block 50 of 215 
+processing block 51 of 215 
+processing block 52 of 215 
+processing block 53 of 215 
+processing block 54 of 215 
+processing block 55 of 215 
+processing block 56 of 215 
+processing block 57 of 215 
+processing block 58 of 215 
+processing block 59 of 215 
+processing block 60 of 215 
+processing block 61 of 215 
+processing block 62 of 215 
+processing block 63 of 215 
+processing block 64 of 215 
+processing block 65 of 215 
+processing block 66 of 215 
+processing block 67 of 215 
+processing block 68 of 215 
+processing block 69 of 215 
+processing block 70 of 215 
+processing block 71 of 215 
+processing block 72 of 215 
+processing block 73 of 215 
+processing block 74 of 215 
+processing block 75 of 215 
+processing block 76 of 215 
+processing block 77 of 215 
+processing block 78 of 215 
+processing block 79 of 215 
+processing block 80 of 215 
+processing block 81 of 215 
+processing block 82 of 215 
+processing block 83 of 215 
+processing block 84 of 215 
+processing block 85 of 215 
+processing block 86 of 215 
+processing block 87 of 215 
+processing block 88 of 215 
+processing block 89 of 215 
+processing block 90 of 215 
+processing block 91 of 215 
+processing block 92 of 215 
+processing block 93 of 215 
+processing block 94 of 215 
+processing block 95 of 215 
+processing block 96 of 215 
+processing block 97 of 215 
+processing block 98 of 215 
+processing block 99 of 215 
+processing block 100 of 215 
+processing block 101 of 215 
+processing block 102 of 215 
+processing block 103 of 215 
+processing block 104 of 215 
+processing block 105 of 215 
+processing block 106 of 215 
+processing block 107 of 215 
+processing block 108 of 215 
+processing block 109 of 215 
+processing block 110 of 215 
+processing block 111 of 215 
+processing block 112 of 215 
+processing block 113 of 215 
+processing block 114 of 215 
+processing block 115 of 215 
+processing block 116 of 215 
+processing block 117 of 215 
+processing block 118 of 215 
+processing block 119 of 215 
+processing block 120 of 215 
+processing block 121 of 215 
+processing block 122 of 215 
+processing block 123 of 215 
+processing block 124 of 215 
+processing block 125 of 215 
+processing block 126 of 215 
+processing block 127 of 215 
+processing block 128 of 215 
+processing block 129 of 215 
+processing block 130 of 215 
+processing block 131 of 215 
+processing block 132 of 215 
+processing block 133 of 215 
+processing block 134 of 215 
+processing block 135 of 215 
+processing block 136 of 215 
+processing block 137 of 215 
+processing block 138 of 215 
+processing block 139 of 215 
+processing block 140 of 215 
+processing block 141 of 215 
+processing block 142 of 215 
+processing block 143 of 215 
+processing block 144 of 215 
+processing block 145 of 215 
+processing block 146 of 215 
+processing block 147 of 215 
+processing block 148 of 215 
+processing block 149 of 215 
+processing block 150 of 215 
+processing block 151 of 215 
+processing block 152 of 215 
+processing block 153 of 215 
+processing block 154 of 215 
+processing block 155 of 215 
+processing block 156 of 215 
+processing block 157 of 215 
+processing block 158 of 215 
+processing block 159 of 215 
+processing block 160 of 215 
+processing block 161 of 215 
+processing block 162 of 215 
+processing block 163 of 215 
+processing block 164 of 215 
+processing block 165 of 215 
+processing block 166 of 215 
+processing block 167 of 215 
+processing block 168 of 215 
+processing block 169 of 215 
+processing block 170 of 215 
+processing block 171 of 215 
+processing block 172 of 215 
+processing block 173 of 215 
+processing block 174 of 215 
+processing block 175 of 215 
+processing block 176 of 215 
+processing block 177 of 215 
+processing block 178 of 215 
+processing block 179 of 215 
+processing block 180 of 215 
+processing block 181 of 215 
+processing block 182 of 215 
+processing block 183 of 215 
+processing block 184 of 215 
+processing block 185 of 215 
+processing block 186 of 215 
+processing block 187 of 215 
+processing block 188 of 215 
+processing block 189 of 215 
+processing block 190 of 215 
+processing block 191 of 215 
+processing block 192 of 215 
+processing block 193 of 215 
+processing block 194 of 215 
+processing block 195 of 215 
+processing block 196 of 215 
+processing block 197 of 215 
+processing block 198 of 215 
+processing block 199 of 215 
+processing block 200 of 215 
+processing block 201 of 215 
+processing block 202 of 215 
+processing block 203 of 215 
+processing block 204 of 215 
+processing block 205 of 215 
+processing block 206 of 215 
+processing block 207 of 215 
+processing block 208 of 215 
+processing block 209 of 215 
+processing block 210 of 215 
+processing block 211 of 215 
+processing block 212 of 215 
+processing block 213 of 215 
+processing block 214 of 215 
+processing block 215 of 215 
+# Termina guardando y cierra la conexion de la magen.
+img.out <- writeStop(img.out)
+
+# Calculo del tiempo de procesamiento.
+timeDiff <- Sys.time() - startTime
+cat("Processing time", format(timeDiff), "\n")
+## Processing time 17.65339 secs
+# Ploteo
+clasificacion_correc = raster("C:/Maestria en Geomatica/Percepcion remota avanzada/Taller 2/Segment_landsat/Forest_NonforestMapTest_v8.tif")
+
+cols <- c("aliceblue", "green", "darkgreen", "yellow2", "blue2", "navy", "gray47", "chartreuse1", "red" )
+
+  plot(clasificacion_correc, col = cols, main = "Edicion Clasificacion de cobertura ", legend=TRUE)
+
+
+Codigo	Cobertura
+1	Agua
+2	Bosque
+3	Palma
+4	Pastos
+5	Construcciones
+6	Suelo desnudo
+7	Cultivos
+8	Humedal
+9	Vias
+Resultados
+Como resultados de la parte I del procesamiento se obtuvo una imagen segmentada, la cual se obtuvo modificando los parametros anterirormente mencionados, tratando de ajustar la mejor segmentacion posible de acuerdo a las coberturas existentes. La parte II generó un archivo CSV que contiene todas las estadisticas de cada cobertura. En la seccion III el resultado fue una clasificación de la imagen realizó una clasificación de imágen. Por ultimo con la seccion IV se realizó la edición de la clase anteriromente seleccionada obteniendo la clasificación final.
+
+Las clasificacion mostró buenos resultados, por tanto no se realizaron muchos puntos de corrección quedando la clasificacion inicial y la edicion de esta muy similares, siendo evidente en el error OOB cuyo valor fue de 0.31%.
+
+Discusión
+La clasificación basada en objetos como método de extracción de información temática cualitativa, permite identificar detalles muy finos de la escena, por esta razon es importante tener en cuenta tanto la resolución espacial de la misma, el tamaño de los pixeles y el objeto a mapear.
+
+Realizando esta practica, se probó inicialmente con imágenes de alta resolucion, para lo cual se necesitó hacer una segmentación muy fina, es decir donde la cantidad de pixeles permitiera identificar objetos muy pequeños, sin embargo al realizar el paso II para obtener el archivo CSV de las caracteristicas de cada polígono fue imposible ejecutarlo ya que demandaba gran capacidad computacional y una duracion de mas de 48 horas. Por esta razon se optó por tomar una imágen Landsat8 cuyo tamaño de pixel es de 30m, presentando tambien algunos problemas para la identificacion de algunas coberturas ya que su resolucion no es lo suficientemente fina para poder realizarlo.
+
+Teniendo en cuenta que el error OOB “out of bag” es el error que generaliza la tasa de error del clasificador, en este caso random forest, fuera de la bolsa en el conjunto de entrenamiento fue de 0.3, lo cual propociona evidencia de que la estimacion fuera de la bolsa es precisa para usar un conjunto de pruba de igual tamaño al conjunto de entrenamiento.
+
+Conclusiones
+Un buen resultado de una clasificación basada en objetos depende de una buena segmentación teniendo en cuenta la resolución de la imagen, igualmente es importante el numero y calidad de los sitios de entrenamiento. La calidad de los sitios hace referencia a que los sitios seleccionados incluyan el mayor numero de variaciones posibles de cada cobertura incluida para la clasificación.
+
+La clasificación basada en objetos es un procedimiento que demanda una gran capacidad computacional y tiempo para realizar los procesos, especialmente cuando se realiza con una imagen de muy alta resolución.
+
+Referencias bibliográficas
+Blaschke, T., Lang, S., Lorup, E., Strobl, J., y Zeil, P.2002. Object-Oriented Image Processing in an Integrated GIS/Remote Sensing Environment and Perspectives for Environmental Applications. ZGIS Zentrum für Geographische Informationsverarbeitung. Research gate.
+
+Breiman, L. y Cutler, A. 2004. Random forest. https://www.stat.berkeley.edu
+
+CRCSI (2017). (Eds. Harrison, B.A., Jupp, D.L.B., Lewis, M.L., Forster, B.C., Coppa, I., Mueller, N., Hudson, D., Phinn, S., Smith, C., Anstee, J., Grant, I., Dekker, A.G., Ong, C., and Lau, I.) Earth Observation: Data, Processing and Applications. Volume 1B: Data-Image Interpretation. Melbourne.
+
+Del Toro, N., Gomariz, F., Cánovas, F., y Alonso, F. 2013. Comparacion de métodos de clasificación de imágenes de satélite en la cuenca del rio Argos (Región de Murcia). Boletín de la Asociación de Geógrafos Españoles N67.
+
+OrfeoToolbox. Documentation. https://www.orfeo-toolbox.org
+
+Rodríguez, V., Ghimire, B., Rogan, J., Chica-Olmo, M., y Rigol, J. 2011. An assessment of the effectiveness of a random forest classifier for land-cover classification. ISPRS Journal of Photogrammetry and Remote Sensing 67 93-104.
+
+Singh, A., y Kant, K. 2016. Satellite image classification using Genetic Algorithm trained radial basis function neural network, application on the detection of flooded areas. J Vis. Commun Image R. India.
+
+Stehman, S. V. (1997), “Selecting and interpreting measures of thematic classification accuracy”, Remote Sensing, Environment, 62:77-89.
+
+Zeeshan, M., Qazi, W., y Aslam, N. 2018. A comparative study of ALOS-2 PALSAR and landsat-8 imagery for land cover classification using maximum likelihood classifier. The Egyptian Journal of Remote Sensing and Space Science.
